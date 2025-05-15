@@ -6,6 +6,7 @@ import { ComponentEditor } from "@/components/website-builder/component-editor";
 import { ComponentPreview } from "@/components/website-builder/component-preview";
 import { Conversation } from "@/components/website-builder/conversation";
 import { WebsitePreview } from "@/components/website-builder/website-preview";
+import { Brain } from "lucide-react";
 import { useState } from "react";
 
 export default function Home() {
@@ -13,8 +14,9 @@ export default function Home() {
 
 	return (
 		<main className="flex flex-col h-screen">
-			<header className="p-4 border-b">
-				<h1 className="text-2xl font-bold">Website Builder IA</h1>
+			<header className="flex items-center gap-2 p-4 border-b">
+				<Brain />
+				<h1 className="flex text-center text-2xl font-bold">GEN UI</h1>
 			</header>
 
 			<div className="flex-1 overflow-hidden">

@@ -1,6 +1,7 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { createMessage, generateId } from "@/lib/utils";
 import { useWebsiteStore } from "@/store/websiteStore";
 import { WebsiteComponent } from "@/types";
 import {
@@ -22,52 +23,87 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
 
-// Composant pour un élément triable
 function SortableItem({ component }: { component: WebsiteComponent }) {
-	const { removeComponent, setActiveComponent } = useWebsiteStore();
-	const { attributes, listeners, setNodeRef, transform, transition } =
-		useSortable({ id: component.id });
+  const { removeComponent, setActiveComponent, setActiveConversation, conversations, addConversation } = useWebsiteStore();
+  const { 
+    attributes, 
+    listeners, 
+    setNodeRef, 
+    transform, 
+    transition 
+  } = useSortable({ id: component.id });
 
-	const style = {
-		transform: CSS.Transform.toString(transform),
-		transition
-	};
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
-	return (
-		<Card
-			ref={setNodeRef}
-			style={style}
-			className="border-2 mb-3"
-		>
-			<CardContent className="p-3">
-				<div className="flex items-center justify-between">
-					<div
-						className="font-medium cursor-move"
-						{...attributes}
-						{...listeners}
-					>
-						{component.type.charAt(0).toUpperCase() + component.type.slice(1)}
-					</div>
-					<div className="flex gap-2">
-						<Button
-							variant="outline"
-							size="sm"
-							onClick={() => setActiveComponent(component.id)}
-						>
-							Modifier
-						</Button>
-						<Button
-							variant="destructive"
-							size="sm"
-							onClick={() => removeComponent(component.id)}
-						>
-							Supprimer
-						</Button>
-					</div>
-				</div>
-			</CardContent>
-		</Card>
-	);
+  // Nouvelle fonction pour gérer le clic sur Modifier
+  const handleEdit = () => {
+    // Définir le composant actif
+    setActiveComponent(component.id);
+    
+    // Trouver la conversation associée à ce composant
+    const conversationForComponent = conversations.find(c => c.componentId === component.id);
+    
+    if (conversationForComponent) {
+      // Si une conversation existe pour ce composant, l'activer
+      setActiveConversation(conversationForComponent.id);
+    } else {
+      // Sinon, créer une nouvelle conversation liée à ce composant
+      const newConversationId = generateId();
+      const initialMessage = createMessage(
+        'user',
+        `Cette conversation est liée au composant de type "${component.type}". Vous pouvez le modifier en décrivant les changements souhaités.`
+      );
+      
+      // Ajouter la nouvelle conversation
+      addConversation({
+        id: newConversationId,
+        messages: [initialMessage],
+        componentId: component.id
+      });
+      
+      // Définir la nouvelle conversation comme active
+      setActiveConversation(newConversationId);
+    }
+  };
+
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style} 
+      className="border-2 mb-3"
+    >
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between">
+          <div 
+            className="font-medium cursor-move" 
+            {...attributes} 
+            {...listeners}
+          >
+            {component.type.charAt(0).toUpperCase() + component.type.slice(1)}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleEdit}  // Utiliser la nouvelle fonction ici
+            >
+              Modifier
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => removeComponent(component.id)}
+            >
+              Supprimer
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function WebsitePreview() {
