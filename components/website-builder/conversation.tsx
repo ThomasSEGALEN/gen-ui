@@ -245,9 +245,6 @@ export function Conversation() {
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>
             {apiError}
-            <div className="mt-2 text-sm">
-              <a href="/config" className="underline">Vérifier la configuration</a>
-            </div>
           </AlertDescription>
         </Alert>
       )}
