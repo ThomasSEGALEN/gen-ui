@@ -101,53 +101,60 @@ export async function generateComponentCode(
 			}
 
 			return data.code;
-		} catch (error: any) {
-			if (error.name === "AbortError") {
-				throw new Error("La requête a pris trop de temps et a été annulée");
+		} catch (error) {
+			if (error instanceof Error) {
+				if (error.name === "AbortError") {
+					throw new Error("La requête a pris trop de temps et a été annulée");
+				}
+				throw error;
+			} else {
+				throw new Error("Erreur inconnue lors de la communication avec l'API");
 			}
-			throw error;
 		}
-	} catch (error: any) {
-		console.error("Erreur détaillée dans generateComponentCode:", error);
-
-		// Créé un message d'erreur convivial avec détails techniques pour le débogage
+	} catch (error) {
 		let errorMessage = "Erreur lors de la génération du code";
-		let technicalDetails = error.message || "Erreur inconnue";
+		let technicalDetails = "Erreur inconnue";
 
-		if (
-			error.message.includes("exceeded your current quota") ||
-			error.message.includes("429")
-		) {
-			errorMessage = "Quota API dépassé";
-			technicalDetails =
-				"Vous avez dépassé votre quota d'utilisation de l'API. Vérifiez votre plan de facturation ou utilisez GROQ comme alternative.";
+		if (error instanceof Error) {
+			console.error("Erreur détaillée dans generateComponentCode:", error);
 
-			return (
-				generateQuotaErrorHTML(errorMessage, technicalDetails) +
-				"<!-- DEMO COMPONENT -->\n" +
-				generateDemoComponent(componentType)
-			);
-		} else if (error.message.includes("API key")) {
-			errorMessage = "Problème avec la clé API";
-			technicalDetails =
-				"Vérifiez que la clé API est correctement configurée et valide";
-		} else if (error.message.includes("401")) {
-			errorMessage = "Authentification échouée";
-			technicalDetails = "Votre clé API n'est pas valide ou a expiré.";
-		} else if (
-			error.message.includes("abort") ||
-			error.message.includes("timeout")
-		) {
-			errorMessage = "La requête a pris trop de temps";
-			technicalDetails =
-				"La connexion à l'API a été interrompue en raison d'un délai d'attente.";
-		} else if (
-			error.message.includes("network") ||
-			error.message.includes("fetch")
-		) {
-			errorMessage = "Problème de connexion réseau";
-			technicalDetails =
-				"Vérifiez votre connexion Internet et les paramètres du proxy si applicable.";
+			technicalDetails = error.message || "Erreur inconnue";
+
+			if (
+				error.message.includes("exceeded your current quota") ||
+				error.message.includes("429")
+			) {
+				errorMessage = "Quota API dépassé";
+				technicalDetails =
+					"Vous avez dépassé votre quota d'utilisation de l'API. Vérifiez votre plan de facturation ou utilisez GROQ comme alternative.";
+
+				return (
+					generateQuotaErrorHTML(errorMessage, technicalDetails) +
+					"<!-- DEMO COMPONENT -->\n" +
+					generateDemoComponent(componentType)
+				);
+			} else if (error.message.includes("API key")) {
+				errorMessage = "Problème avec la clé API";
+				technicalDetails =
+					"Vérifiez que la clé API est correctement configurée et valide";
+			} else if (error.message.includes("401")) {
+				errorMessage = "Authentification échouée";
+				technicalDetails = "Votre clé API n'est pas valide ou a expiré.";
+			} else if (
+				error.message.includes("abort") ||
+				error.message.includes("timeout")
+			) {
+				errorMessage = "La requête a pris trop de temps";
+				technicalDetails =
+					"La connexion à l'API a été interrompue en raison d'un délai d'attente.";
+			} else if (
+				error.message.includes("network") ||
+				error.message.includes("fetch")
+			) {
+				errorMessage = "Problème de connexion réseau";
+				technicalDetails =
+					"Vérifiez votre connexion Internet et les paramètres du proxy si applicable.";
+			}
 		}
 
 		// Retourner un HTML avec message d'erreur pour l'affichage, suivi d'un composant de démo

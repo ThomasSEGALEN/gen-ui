@@ -90,8 +90,12 @@ export async function POST(request: Request) {
 					code,
 					provider: "groq"
 				});
-			} catch (error: any) {
-				console.error("Erreur GROQ:", error.message);
+			} catch (error) {
+				if (error instanceof Error) {
+					console.error("Erreur GROQ:", error.message);
+				} else {
+					console.error("Erreur GROQ:", "Erreur inconnue");
+				}
 				// Si GROQ échoue, on passera à OpenAI ou au mode de secours
 			}
 		}
@@ -133,23 +137,27 @@ export async function POST(request: Request) {
 					code,
 					provider: "openai"
 				});
-			} catch (error: any) {
-				console.error("Erreur OpenAI:", error.message);
+			} catch (error) {
+				if (error instanceof Error) {
+					console.error("Erreur OpenAI:", error.message);
 
-				// Si c'est une erreur de quota, propager spécifiquement cette erreur
-				if (
-					error.message.includes("429") ||
-					error.message.includes("exceeded your current quota")
-				) {
-					return NextResponse.json(
-						{
-							error: "Quota API OpenAI dépassé",
-							details:
-								"Vous avez dépassé votre quota d'utilisation de l'API OpenAI.",
-							useDemo: true
-						},
-						{ status: 429 }
-					);
+					// Si c'est une erreur de quota, propager spécifiquement cette erreur
+					if (
+						error.message.includes("429") ||
+						error.message.includes("exceeded your current quota")
+					) {
+						return NextResponse.json(
+							{
+								error: "Quota API OpenAI dépassé",
+								details:
+									"Vous avez dépassé votre quota d'utilisation de l'API OpenAI.",
+								useDemo: true
+							},
+							{ status: 429 }
+						);
+					}
+				} else {
+					console.error("Erreur OpenAI:", "Erreur inconnue");
 				}
 			}
 		}
@@ -168,17 +176,28 @@ export async function POST(request: Request) {
 			},
 			{ status: 500 }
 		);
-	} catch (error: any) {
-		// Log détaillé de l'erreur
-		console.error("ERREUR API IA DÉTAILLÉE:", error.name, error.message);
+	} catch (error) {
+		if (error instanceof Error) {
+			// Log détaillé de l'erreur
+			console.error("ERREUR API IA DÉTAILLÉE:", error.name, error.message);
 
-		return NextResponse.json(
-			{
-				error: "Erreur lors de la communication avec l'IA",
-				details: error.message,
-				useDemo: true
-			},
-			{ status: 500 }
-		);
+			return NextResponse.json(
+				{
+					error: "Erreur lors de la communication avec l'IA",
+					details: error.message,
+					useDemo: true
+				},
+				{ status: 500 }
+			);
+		} else {
+			return NextResponse.json(
+				{
+					error: "Erreur inconnue lors de la communication avec l'IA",
+					details: "Une erreur inconnue s'est produite.",
+					useDemo: true
+				},
+				{ status: 500 }
+			);
+		}
 	}
 }
